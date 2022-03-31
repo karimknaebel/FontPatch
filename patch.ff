@@ -1,0 +1,78 @@
+#!fontforge
+
+# Usage: patch.ff <font_to_patch> <symbol_font_1> ... <symbol_font_n>
+
+Open($1)
+
+
+###
+### PS NAMES
+###
+
+# the fontname is important to get right because the TTF Family and Subfamily are derived from it.
+fontname_components = StrSplit($fontname, "-", 2)
+fontname = fontname_components[0] + "Symbols"
+if ( SizeOf(fontname_components) == 2 )
+  # this is usually the case
+  fontname = fontname + "-" + fontname_components[1]
+endif
+SetFontNames(fontname, $familyname + " Symbols", $fullname + " Symbols")
+
+
+###
+### TTF NAMES
+###
+
+# for IDs see: https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+ttf_lang = 0x409 # English (US)
+
+ttf_family = GetTTFName(ttf_lang, 1)
+if ( ttf_family!="" )
+  # adjust the Family if it exists
+  SetTTFName(ttf_lang, 1, ttf_family + " Symbols")
+endif
+
+ttf_prefered_family = GetTTFName(ttf_lang, 16)
+if ( ttf_prefered_family!="" )
+  # adjust the Preferred Family if it exists
+  SetTTFName(ttf_lang, 16, ttf_prefered_family + " Symbols")
+endif
+
+ttf_uniqueid = GetTTFName(ttf_lang, 3)
+if ( ttf_uniqueid!="" )
+  # adjust the Unique ID if it exists
+  SetTTFName(ttf_lang, 3, ttf_uniqueid + ";Symbols")
+endif
+
+
+###
+### PATCHING
+###
+
+ascent = $ascent
+descent = $descent
+
+i=2
+while ( i < $argc )
+  Open($argv[i])
+  Print("Patching with symbol font " + (i - 1) + "/" + ($argc - 2) + ": " + $filename:t)
+  SelectAll()
+  ScaleToEm(ascent, descent)
+  /* RoundToInt() # should we use this? */
+  scaled_filename = $filename:r + "-temp.sfd"
+  Save(scaled_filename)
+  Close()
+  Open($1)
+  MergeFonts(scaled_filename)
+  i++
+endloop
+
+
+###
+### SAVING
+###
+
+patched_filename = $filename:r + "-" + "Symbols." + $filename:e
+Generate(patched_filename)
+Print("Generated patched font at: " + patched_filename)
+Close()
