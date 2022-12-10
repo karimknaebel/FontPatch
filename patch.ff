@@ -1,4 +1,4 @@
-#!fontforge
+#!/usr/bin/env fontforge
 
 # Usage: patch.ff <font_to_patch> <symbol_font_1> ... <symbol_font_n>
 
