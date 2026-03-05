@@ -1,4 +1,6 @@
-# Usage
+Patches arbitrary ttf fonts with the [nonicons](https://github.com/ya2s/nonicons) and [nerd-fonts](https://github.com/ryanoasis/nerd-fonts) symbol fonts.
+
+## Usage
 
 ```bash
 # first download symbol fonts to $HOME/Library/Fonts
