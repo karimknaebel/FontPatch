@@ -72,7 +72,7 @@ endloop
 ### SAVING
 ###
 
-patched_filename = $filename:r + "-" + "Symbols." + $filename:e
+patched_filename = $1:r + "-" + "Symbols." + $1:e
 Generate(patched_filename)
 Print("Generated patched font at: " + patched_filename)
 Close()
