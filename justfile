@@ -3,43 +3,37 @@ set positional-arguments
 patch +FONTS:
   #!/usr/bin/env zsh
   set -e
-  fonttools_python=$(sed -n '1s/^#!//p' "$(command -v fonttools)")
+  temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/fontpatch.XXXXXX")
+  trap 'rm -rf "$temp_dir"' EXIT
+
   for FILE in "$@"
   do
-    temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/fontpatch.XXXXXX")
-    trap 'rm -rf "$temp_dir"' EXIT
+    case "${FILE:e:l}" in
+      otf|ttf) ;;
+      *) print -u2 "Unsupported font format: $FILE"; exit 1 ;;
+    esac
 
-    patch_input="${temp_dir}/${FILE:t}"
-    patch_output="${patch_input:r}-Symbols.${patch_input:e}"
-    final_output="${FILE:r}-Symbols.${FILE:e}"
-
-    if [[ "${FILE:e:l}" == otf ]]; then
-      uv run --no-cache --no-project --python "$fonttools_python" python ./patch_otf.py "$FILE" "$patch_output" \
-        "$HOME/Library/Fonts/nonicons.ttf" "$HOME/Library/Fonts/SymbolsNerdFont-Regular.ttf"
-      mv "$patch_output" "$final_output"
-      rm -rf "$temp_dir"
-      trap - EXIT
-      continue
-    fi
-
-    cp "$HOME/Library/Fonts/nonicons.ttf" "${temp_dir}/nonicons.ttf"
-    cp "$HOME/Library/Fonts/SymbolsNerdFont-Regular.ttf" "${temp_dir}/SymbolsNerdFont-Regular.ttf"
-
-    if ttx -l "$FILE" | grep -qE '^[[:space:]]+fvar[[:space:]]'; then
-      fonttools varLib.instancer --static --downgrade-cff2 -o "$patch_input" "$FILE"
-    else
-      cp "$FILE" "$patch_input"
-    fi
-
-    ./patch.ff "$patch_input" "${temp_dir}/nonicons.ttf" "${temp_dir}/SymbolsNerdFont-Regular.ttf"
-    mv "$patch_output" "$final_output"
-    uv run --no-cache --no-project --python "$fonttools_python" python ./rename_font.py "$FILE" "$final_output"
-
-    rm -rf "$temp_dir"
-    trap - EXIT
+    patch_output="${temp_dir}/${FILE:t:r}-Symbols.${FILE:e}"
+    uv run "./patch_${FILE:e:l}.py" "$FILE" "$patch_output" \
+      "$HOME/Library/Fonts/nonicons.ttf" "$HOME/Library/Fonts/SymbolsNerdFont-Regular.ttf"
+    mv "$patch_output" "${FILE:r}-Symbols.${FILE:e}"
   done
 
-download:
+test:
+  #!/usr/bin/env zsh
+  set -e
+  requirements=$(mktemp "${TMPDIR:-/tmp}/fontpatch-test.XXXXXX")
+  trap 'rm -f "$requirements"' EXIT
+
+  for format in otf ttf
+  do
+    uv export --quiet --script "patch_${format}.py" --no-hashes > "$requirements"
+    uv run --no-project --with-requirements "$requirements" python -m unittest "test_patch_${format}"
+  done
+
+download_symbols:
   test -d "$HOME/Library/Fonts"
+  # Last tested with nonicons commit 42b614932a503f1bd4818bc72a2440c3b77a5c8e.
   wget -nc -P "$HOME/Library/Fonts" "https://github.com/ya2s/nonicons/raw/refs/heads/master/dist/nonicons.ttf"
+  # Last tested with nerd-fonts commit 92a27e07169ff364c058699760c08c47baa67eb7.
   wget -nc -P "$HOME/Library/Fonts" "https://github.com/ryanoasis/nerd-fonts/raw/refs/heads/master/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf"

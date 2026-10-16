@@ -1,24 +1,24 @@
-Patches arbitrary `ttf` and `otf` fonts with the [nonicons](https://github.com/ya2s/nonicons) and [nerd-fonts](https://github.com/ryanoasis/nerd-fonts) symbol fonts.
+Adds [nonicons](https://github.com/ya2s/nonicons) and [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) symbols to `.ttf` and `.otf` fonts.
 
-Variable OTF fonts retain their axes and named styles. Variable TTF fonts are
-instantiated to their default axis values before patching.
+## Requirements
 
-Requires `just`, FontForge, FontTools (with CFF2 instancing support), and `uv`.
-OTF fonts are patched with FontTools to preserve their existing outlines and layout
-tables. Existing characters take priority, followed by nonicons, then Nerd Fonts
-when their codepoints overlap.
-For monospaced OTF fonts, added symbols keep a single-cell advance but may draw
-up to two cells wide, allowing terminals to use adjacent whitespace for wide icons.
+Install `just` and `uv`.
 
 ## Usage
 
 ```bash
-# first download symbol fonts to $HOME/Library/Fonts
-just download
+# Download the symbol fonts to ~/Library/Fonts
+just download_symbols
 
-# then patch a list of fonts. they will be saved with a -Symbols file name suffix
-just patch ~/Library/Fonts/JetBrainsMono-Regular.ttf ~/Library/Fonts/JetBrainsMono-Bold.ttf
+# Patch one or more fonts
+just patch ~/Library/Fonts/JetBrainsMono-Regular.ttf ~/Library/Fonts/TX-02-Variable.otf
 ```
+
+Each patched copy is saved beside its original with a `-Symbols` filename suffix.
+Select the font with **Symbols** in its family name in your app, such as **JetBrains Mono Symbols**.
+
+Variable OTF fonts retain their weight, width, and other controls.
+Variable TTF fonts become static fonts at their default settings.
 
 ## Example of Patched Font
 
