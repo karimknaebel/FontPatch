@@ -22,4 +22,4 @@ Variable TTF fonts become static fonts at their default settings.
 
 ## Example of Patched Font
 
-<img width="589" height="539" src="https://github.com/user-attachments/assets/d6b64110-e963-4c43-a515-fa94e11d736a" />
+<img width="100%" src="https://github.com/user-attachments/assets/d6b64110-e963-4c43-a515-fa94e11d736a" />
